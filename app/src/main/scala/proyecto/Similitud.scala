@@ -92,7 +92,15 @@ object Similitud {
   def jaccard(h1: Huella, h2: Huella): Double = ???
 
   /** Las n (n - 1) / 2 parejas (i, j) con i < j, en orden. */
-  def parejas(n: Int): Vector[Pareja] = ???
+  def parejas(n: Int): Vector[Pareja] = {
+    val rango = (1 to n).toVector
+
+    for{
+      i <- rango
+      j <- rango.dropWhile(_ != i).drop(1)
+      if i < j
+    } yield new Pareja(i,j)
+  }
 
   /** La similitud de cada pareja que se le pase, en el mismo orden. */
   def similitudes(hs: Vector[Huella], ps: Vector[Pareja]): Vector[Medicion] = ???
