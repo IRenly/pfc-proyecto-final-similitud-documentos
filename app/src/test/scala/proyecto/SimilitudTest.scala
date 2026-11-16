@@ -62,6 +62,24 @@ class SimilitudTest extends AnyFunSuite {
       Vector(Vector("a", "b"), Vector("b", "c"), Vector("c", "d")))
   }
 
+  test("fragmentos: ejemplo del enunciado") {
+    val ts = Vector("el", "gato", "duerme", "en", "el", "sofa")
+    assert(Similitud.fragmentos(ts, 3).length == 4)
+    assert(Similitud.fragmentos(ts, 3).head == Vector("el", "gato", "duerme"))
+  }
+  test("fragmentos: menos de k palabras") {
+    assert(Similitud.fragmentos(Vector("a", "b"), 3) == Vector())
+  }
+  test("fragmentos: exactamente k palabras") {
+    assert(Similitud.fragmentos(Vector("a", "b", "c"), 3) == Vector(Vector("a", "b", "c")))
+  }
+  test("fragmentos: k = 1") {
+    assert(Similitud.fragmentos(Vector("a", "b"), 1) == Vector(Vector("a"), Vector("b")))
+  }
+  test("fragmentos: vector vacío") {
+    assert(Similitud.fragmentos(Vector(), 2) == Vector())
+  }
+
   test("huella: el ejemplo 1 tiene 4, 4 y 3 fragmentos") {
     assert(huella(d0, 3).size == 4)
     assert(huella(d1, 3).size == 4)
