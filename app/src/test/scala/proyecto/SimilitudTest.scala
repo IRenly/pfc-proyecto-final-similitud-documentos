@@ -71,6 +71,43 @@ class SimilitudTest extends AnyFunSuite {
     assert(math.abs(ms(0) - 2.0 / 6.0) < eps && ms(1) == 0.0 && ms(2) == 0.0)
   }
 
+  // --- Pruebas propias para 2.8: similitudes ---
+  test("similitudes propio 1: documentos con huellas idénticas dan similitud 1.0") {
+    val hA: Huella = Set(Vector("a", "b"), Vector("b", "c"))
+    val hs: Vector[Huella] = Vector(hA, hA)
+    val ms = similitudes(hs, Vector((0, 1)))
+    assert(ms.length == 1 && ms.head._1 == 0 && ms.head._2 == 1 && math.abs(ms.head._3 - 1.0) < eps)
+  }
+
+  test("similitudes propio 2: documentos totalmente disjuntos dan similitud 0.0") {
+    val hA: Huella = Set(Vector("a", "b"))
+    val hB: Huella = Set(Vector("x", "y"))
+    val hs: Vector[Huella] = Vector(hA, hB)
+    val ms = similitudes(hs, Vector((0, 1)))
+    assert(ms == Vector((0, 1, 0.0)))
+  }
+
+  test("similitudes propio 3: solapamiento parcial calcula el Jaccard exacto") {
+    val hA: Huella = Set(Vector("a"), Vector("b"), Vector("c"))
+    val hB: Huella = Set(Vector("b"), Vector("c"), Vector("d"))
+    val hs: Vector[Huella] = Vector(hA, hB)
+    val ms = similitudes(hs, Vector((0, 1)))
+    assert(ms.length == 1 && ms.head._1 == 0 && ms.head._2 == 1 && math.abs(ms.head._3 - 0.5) < eps)
+  }
+
+  test("similitudes propio 4: preserva el orden exacto de las parejas consultadas") {
+    val h: Huella = Set(Vector("a"))
+    val hs: Vector[Huella] = Vector(h, h, h)
+    val ps = Vector((1, 2), (0, 2), (0, 1))
+    val ms = similitudes(hs, ps)
+    assert(ms.map(m => (m._1, m._2)) == ps)
+  }
+
+  test("similitudes propio 5: vector de parejas vacío devuelve vector vacío") {
+    val hs: Vector[Huella] = Vector(Set(Vector("a")), Set(Vector("b")))
+    assert(similitudes(hs, Vector.empty[Pareja]).isEmpty)
+  }
+
   test("indiceInvertido: el fragmento inicial de d0 está en d0 y en d1") {
     val idx = indiceInvertido(huellas(c1, 3))
     assert(idx(Vector("el", "gato", "duerme")) == Set(0, 1))
@@ -87,6 +124,33 @@ class SimilitudTest extends AnyFunSuite {
     assert(ranking(ms, 0.0, 2).length == 2)
   }
 
+  // --- Pruebas propias para 2.11: ranking ---
+  test("ranking propio 1: filtra estrictamente por umbral descartando menores") {
+    val ms: Vector[Medicion] = Vector((0, 1, 0.8), (0, 2, 0.45), (1, 2, 0.6), (1, 3, 0.2))
+    assert(ranking(ms, 0.5, 10) == Vector((0, 1, 0.8), (1, 2, 0.6)))
+  }
+
+  test("ranking propio 2: desempata por posición lexicográfica (i, j) ante similitudes idénticas") {
+    val ms: Vector[Medicion] = Vector((1, 2, 0.7), (0, 3, 0.7), (0, 1, 0.7), (0, 2, 0.7))
+    assert(ranking(ms, 0.5, 10) == Vector((0, 1, 0.7), (0, 2, 0.7), (0, 3, 0.7), (1, 2, 0.7)))
+  }
+
+  test("ranking propio 3: trunca exactamente a p cuando hay más candidatos que el tope") {
+    val ms: Vector[Medicion] = Vector((0, 1, 0.9), (0, 2, 0.85), (0, 3, 0.8), (1, 2, 0.75), (1, 3, 0.7))
+    assert(ranking(ms, 0.7, 3) == Vector((0, 1, 0.9), (0, 2, 0.85), (0, 3, 0.8)))
+  }
+
+  test("ranking propio 4: devuelve todos los que superan el umbral cuando p es mayor a los disponibles") {
+    val ms: Vector[Medicion] = Vector((0, 1, 0.95), (2, 3, 0.8))
+    assert(ranking(ms, 0.5, 100) == Vector((0, 1, 0.95), (2, 3, 0.8)))
+  }
+
+  test("ranking propio 5: maneja vector vacío o cuando ningún par supera el umbral") {
+    val ms: Vector[Medicion] = Vector((0, 1, 0.1), (0, 2, 0.2))
+    assert(ranking(ms, 0.5, 5).isEmpty)
+    assert(ranking(Vector.empty[Medicion], 0.0, 5).isEmpty)
+  }
+
   test("detectar: el ejemplo 2 reporta (0, 1) con 0.75 y (2, 3) con 0.5") {
     val r = detectarDirecto(c2, 3, 0.3, 5)
     assert(r.map(m => (m._1, m._2)) == Vector((0, 1), (2, 3)))
@@ -96,5 +160,80 @@ class SimilitudTest extends AnyFunSuite {
   test("detectar: las dos soluciones coinciden en los ejemplos") {
     assert(detectarDirecto(c1, 3, 0.2, 5) == detectarConIndice(c1, 3, 0.2, 5))
     assert(detectarDirecto(c2, 3, 0.3, 5) == detectarConIndice(c2, 3, 0.3, 5))
+  }
+
+  // --- Pruebas propias para 2.12: detectarDirecto y detectarConIndice ---
+  val docA: Documento = ("docA", Vector("programacion", "funcional", "en", "scala", "es", "declarativa"))
+  val docB: Documento = ("docB", Vector("programacion", "funcional", "en", "scala", "es", "expresiva"))
+  val docC: Documento = ("docC", Vector("redes", "neuronales", "profundas", "en", "python"))
+  val corpusTest: Corpus = Vector(docA, docB, docC)
+
+  test("detectarDirecto propio 1: detecta alta similitud entre documentos con prefijo común") {
+    val res = detectarDirecto(corpusTest, 3, 0.5, 5)
+    assert(res.length == 1)
+    assert(res.head._1 == 0 && res.head._2 == 1)
+  }
+
+  test("detectarDirecto propio 2: umbral alto descarta parejas con similitud moderada") {
+    val res = detectarDirecto(corpusTest, 3, 0.9, 5)
+    assert(res.isEmpty)
+  }
+
+  test("detectarDirecto propio 3: respeta el tope p de parejas más similares") {
+    val dX: Documento = ("dX", Vector("mismo", "texto", "repetido", "siempre"))
+    val cIdenticos: Corpus = Vector(dX, dX, dX, dX)
+    val res = detectarDirecto(cIdenticos, 2, 0.5, 2)
+    assert(res.length == 2)
+    assert(math.abs(res.head._3 - 1.0) < eps)
+  }
+
+  test("detectarDirecto propio 4: corpus sin fragmentos comunes retorna vector vacío") {
+    val cDisjunto: Corpus = Vector(
+      ("d1", Vector("perro", "corre")),
+      ("d2", Vector("pez", "nada")),
+      ("d3", Vector("ave", "vuela"))
+    )
+    val res = detectarDirecto(cDisjunto, 2, 0.1, 5)
+    assert(res.isEmpty)
+  }
+
+  test("detectarDirecto propio 5: desempata parejas con igual similitud por índices (i, j)") {
+    val dP: Documento = ("dP", Vector("a", "b", "c"))
+    val cP: Corpus = Vector(dP, dP, dP)
+    val res = detectarDirecto(cP, 2, 0.0, 3)
+    assert(res.map(m => (m._1, m._2)) == Vector((0, 1), (0, 2), (1, 2)))
+  }
+
+  test("detectarConIndice propio 1: produce exactamente el mismo ranking que detectarDirecto") {
+    assert(detectarDirecto(corpusTest, 3, 0.3, 5) == detectarConIndice(corpusTest, 3, 0.3, 5))
+  }
+
+  test("detectarConIndice propio 2: corpus disjunto no genera candidatos y retorna vacío") {
+    val cDisjunto: Corpus = Vector(
+      ("d1", Vector("alfa", "beta")),
+      ("d2", Vector("gamma", "delta")),
+      ("d3", Vector("epsilon", "zeta"))
+    )
+    assert(detectarConIndice(cDisjunto, 2, 0.1, 5).isEmpty)
+  }
+
+  test("detectarConIndice propio 3: umbral 1.0 solo detecta copias idénticas") {
+    val dX: Documento = ("dX", Vector("palabra", "uno", "dos", "tres"))
+    val cMixto: Corpus = Vector(docA, docB, dX, dX)
+    val res = detectarConIndice(cMixto, 2, 1.0, 5)
+    assert(res.length == 1)
+    assert(res.head._1 == 2 && res.head._2 == 3 && math.abs(res.head._3 - 1.0) < eps)
+  }
+
+  test("detectarConIndice propio 4: respeta truncamiento a p elementos") {
+    val dP: Documento = ("dP", Vector("comun", "uno", "dos", "tres"))
+    val cCuatro: Corpus = Vector(dP, dP, dP, dP)
+    val res = detectarConIndice(cCuatro, 2, 0.5, 1)
+    assert(res.length == 1)
+  }
+
+  test("detectarConIndice propio 5: coincide con directo usando corpusConCopias") {
+    val cCopias = corpusConCopias(4, 30, 8, 2, 0.7)
+    assert(detectarConIndice(cCopias, 3, 0.2, 5) == detectarDirecto(cCopias, 3, 0.2, 5))
   }
 }
