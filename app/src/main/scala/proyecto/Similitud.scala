@@ -92,19 +92,40 @@ object Similitud {
   }
 
   /** El conjunto de fragmentos del documento: un repetido cuenta una vez. */
-  def huella(d: Documento, k: Int): Huella = ???
+  def huella(d: Documento, k: Int): Huella = {
+    d match{
+      case (id: String, words: Vector[String]) => fragmentos(words,k).toSet
+    }
+  }
 
   /** Una huella por documento del corpus, en el mismo orden. */
-  def huellas(c: Corpus, k: Int): Vector[Huella] = ???
+  def huellas(c: Corpus, k: Int): Vector[Huella] = {
+    for (doc <- c) yield huella(doc,k) //Funcion provisional
+  }
 
   /**
    * Índice de Jaccard de dos huellas, el tamaño de la intersección sobre el de
    * la unión. Dos huellas vacías dan cero y no dividen por cero.
    */
-  def jaccard(h1: Huella, h2: Huella): Double = ???
+  def jaccard(h1: Huella, h2: Huella): Double = {
+    (h1,h2) match{
+      case (Nil,Nil) => 0.0
+      case (Nil, set2) => 0.0 //La intersección de un set con uno vacío siempre da 0
+      case (set1, Nil) => 0.0
+      case (set1, set2) => (set1 intersect set2).size.toDouble / (set1 union set2).size
+    }
+  }
 
   /** Las n (n - 1) / 2 parejas (i, j) con i < j, en orden. */
-  def parejas(n: Int): Vector[Pareja] = ???
+  def parejas(n: Int): Vector[Pareja] = {
+    val rango = (1 to n).toVector
+
+    for{
+      i <- rango
+      j <- rango.dropWhile(_ != i).drop(1)
+      if i < j
+    } yield new Pareja(i,j)
+  }
 
   /** La similitud de cada pareja que se le pase, en el mismo orden. */
   def similitudes(hs: Vector[Huella], ps: Vector[Pareja]): Vector[Medicion] = ???
