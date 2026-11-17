@@ -40,10 +40,44 @@ class SimilitudTest extends AnyFunSuite {
     assert(normalizar("El Gato Duerme") == Vector("el", "gato", "duerme"))
   }
 
+  test("normalizar: puntuación y mayúsculas") {
+    assert(Similitud.normalizar("El gato, duerme!") == Vector("el", "gato", "duerme"))
+  }
+  test("normalizar: espacios múltiples") {
+    assert(Similitud.normalizar("a   b") == Vector("a", "b"))
+  }
+  test("normalizar: texto vacío") {
+    assert(Similitud.normalizar("") == Vector())
+  }
+  test("normalizar: solo signos") {
+    assert(Similitud.normalizar("...,;!") == Vector())
+  }
+  test("normalizar: dígitos") {
+    assert(Similitud.normalizar("Punto 3: ok") == Vector("punto", "3", "ok"))
+  }
+
   test("fragmentos: son las ventanas consecutivas, en orden") {
     val ts = Vector("a", "b", "c", "d")
     assert(fragmentos(ts, 2) ==
       Vector(Vector("a", "b"), Vector("b", "c"), Vector("c", "d")))
+  }
+
+  test("fragmentos: ejemplo del enunciado") {
+    val ts = Vector("el", "gato", "duerme", "en", "el", "sofa")
+    assert(Similitud.fragmentos(ts, 3).length == 4)
+    assert(Similitud.fragmentos(ts, 3).head == Vector("el", "gato", "duerme"))
+  }
+  test("fragmentos: menos de k palabras") {
+    assert(Similitud.fragmentos(Vector("a", "b"), 3) == Vector())
+  }
+  test("fragmentos: exactamente k palabras") {
+    assert(Similitud.fragmentos(Vector("a", "b", "c"), 3) == Vector(Vector("a", "b", "c")))
+  }
+  test("fragmentos: k = 1") {
+    assert(Similitud.fragmentos(Vector("a", "b"), 1) == Vector(Vector("a"), Vector("b")))
+  }
+  test("fragmentos: vector vacío") {
+    assert(Similitud.fragmentos(Vector(), 2) == Vector())
   }
 
   test("huella: el ejemplo 1 tiene 4, 4 y 3 fragmentos") {
