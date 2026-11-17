@@ -77,7 +77,7 @@ object Similitud {
    * Los t - k + 1 fragmentos de k palabras consecutivas, en el orden en que
    * aparecen; el vector vacío si el documento tiene menos de k palabras.
    */
-  def fragmentos(ts: Vector[String], k: Int): Vector[Fragmento] = ???
+  def fragmentos(ts: Vector[String], k: Int): Vector[Fragmento] = ??? 
 
   /** El conjunto de fragmentos del documento: un repetido cuenta una vez. */
   def huella(d: Documento, k: Int): Huella = {
@@ -97,9 +97,7 @@ object Similitud {
    */
   def jaccard(h1: Huella, h2: Huella): Double = {
     (h1,h2) match{
-      case (Nil,Nil) => 0.0
-      case (Nil, set2) => 0.0 //La intersección de un set con uno vacío siempre da 0
-      case (set1, Nil) => 0.0
+      case (set1, set2) if set1.head.isEmpty && set2.head.isEmpty => 0.0
       case (set1, set2) => (set1 intersect set2).size.toDouble / (set1 union set2).size
     }
   }
