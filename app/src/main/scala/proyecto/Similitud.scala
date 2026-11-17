@@ -109,9 +109,7 @@ object Similitud {
    */
   def jaccard(h1: Huella, h2: Huella): Double = {
     (h1,h2) match{
-      case (Nil,Nil) => 0.0
-      case (Nil, set2) => 0.0 //La intersección de un set con uno vacío siempre da 0
-      case (set1, Nil) => 0.0
+      case (set1, set2) if set1.head.isEmpty && set2.head.isEmpty => 0.0
       case (set1, set2) => (set1 intersect set2).size.toDouble / (set1 union set2).size
     }
   }

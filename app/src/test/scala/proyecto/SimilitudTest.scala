@@ -131,4 +131,71 @@ class SimilitudTest extends AnyFunSuite {
     assert(detectarDirecto(c1, 3, 0.2, 5) == detectarConIndice(c1, 3, 0.2, 5))
     assert(detectarDirecto(c2, 3, 0.3, 5) == detectarConIndice(c2, 3, 0.3, 5))
   }
+
+  // PRUEBAS PROPIAS Huellas(), Jaccard(), Parejas() -----------------------------------------------------------
+  // Huellas - 2.5(2)
+  test("huellas [+]: La huella de d0 es igual incluso si d0 está adentro del corpus"){
+    assert(huella(d0,3) == huellas(c1,3).head)
+  }
+  
+  test("huellas [+]: Dos corpus iguales generan las mismas huellas"){
+    assert(huellas(c2,3) == huellas(c2,3))
+  }
+
+  val corpusVacio: Corpus = Vector()
+
+  test("huellas [+]: Un corpus vacío da un vector vacío"){
+    assert(huellas(corpusVacio,3).isEmpty)
+  }
+
+  test("huellas [+]: Cuando hay menos de k palabras, devuelve un vector con sets vacíos"){
+    assert(huellas(c2,30).forall(_.isEmpty))
+  }
+
+  test("huellas [+]: Con un k menor a 1 los sets contienen un vector vacío"){
+    assert(huellas(c1,-2).forall(_.forall(_.isEmpty)))
+  }
+
+  // Jaccard - 2.6
+  test("jaccard [+]: Dos huellas vacías dan como resultado 0"){
+    assert(jaccard(huella(e2,0),huella(e3,0)) == 0)
+  }
+
+  test("jaccard [+]: Con una huella vacía, el resultado es 0"){
+    assert(jaccard(huella(e2,0),huella(e3,3)) == 0)
+  }
+
+  test("jaccard [+]: Las huellas de 2 documentos totalmente distintos da como resultado 0"){
+    assert(jaccard(huella(d0,3),huella(e3,3)) == 0)
+  }
+
+  test("jaccard [+]: Jaccard de d0 y d1 con k=4 resulta en 0.2"){
+    assert(math.abs(jaccard(huella(d0, 4), huella(d1, 4)) - 0.2) < eps)
+  }
+
+  test("jaccard [+]: Dos huellas identicas da 1"){
+    assert(jaccard(huella(e0,3),huella(e0,3)) == 1)
+  }
+
+  // Parejas - 2.7
+  test("parejas [+]: i es menor a j"){
+    assert(parejas(5).forall { case (a,b) => a < b })
+  }
+
+  test("parejas [+]: No hay parejas (i,i)"){
+    assert(parejas(5).forall { case (a,b) => a != b })
+  }
+
+  test("parejas [+]: n = 1 da un Vector vacío"){
+    assert(parejas(1).isEmpty)
+  }
+
+  test("parejas [+]: n = 3 da Vector( (1,2), (1,3), (2,3) )"){
+    assert(parejas(3) == Vector( (1,2),(1,3),(2,3) ))
+  }
+
+  test("parejas [+]: n = 10 da un tamaño de 45 [ 10 (10-1)/2 ]"){
+    assert(parejas(10).length == 45)
+  }
+
 }
