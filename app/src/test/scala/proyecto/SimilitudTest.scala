@@ -40,10 +40,44 @@ class SimilitudTest extends AnyFunSuite {
     assert(normalizar("El Gato Duerme") == Vector("el", "gato", "duerme"))
   }
 
+  test("normalizar: puntuación y mayúsculas") {
+    assert(Similitud.normalizar("El gato, duerme!") == Vector("el", "gato", "duerme"))
+  }
+  test("normalizar: espacios múltiples") {
+    assert(Similitud.normalizar("a   b") == Vector("a", "b"))
+  }
+  test("normalizar: texto vacío") {
+    assert(Similitud.normalizar("") == Vector())
+  }
+  test("normalizar: solo signos") {
+    assert(Similitud.normalizar("...,;!") == Vector())
+  }
+  test("normalizar: dígitos") {
+    assert(Similitud.normalizar("Punto 3: ok") == Vector("punto", "3", "ok"))
+  }
+
   test("fragmentos: son las ventanas consecutivas, en orden") {
     val ts = Vector("a", "b", "c", "d")
     assert(fragmentos(ts, 2) ==
       Vector(Vector("a", "b"), Vector("b", "c"), Vector("c", "d")))
+  }
+
+  test("fragmentos: ejemplo del enunciado") {
+    val ts = Vector("el", "gato", "duerme", "en", "el", "sofa")
+    assert(Similitud.fragmentos(ts, 3).length == 4)
+    assert(Similitud.fragmentos(ts, 3).head == Vector("el", "gato", "duerme"))
+  }
+  test("fragmentos: menos de k palabras") {
+    assert(Similitud.fragmentos(Vector("a", "b"), 3) == Vector())
+  }
+  test("fragmentos: exactamente k palabras") {
+    assert(Similitud.fragmentos(Vector("a", "b", "c"), 3) == Vector(Vector("a", "b", "c")))
+  }
+  test("fragmentos: k = 1") {
+    assert(Similitud.fragmentos(Vector("a", "b"), 1) == Vector(Vector("a"), Vector("b")))
+  }
+  test("fragmentos: vector vacío") {
+    assert(Similitud.fragmentos(Vector(), 2) == Vector())
   }
 
   test("huella: el ejemplo 1 tiene 4, 4 y 3 fragmentos") {
@@ -236,4 +270,70 @@ class SimilitudTest extends AnyFunSuite {
     val cCopias = corpusConCopias(4, 30, 8, 2, 0.7)
     assert(detectarConIndice(cCopias, 3, 0.2, 5) == detectarDirecto(cCopias, 3, 0.2, 5))
   }
+  // PRUEBAS PROPIAS Huellas(), Jaccard(), Parejas() -----------------------------------------------------------
+  // Huellas - 2.5(2)
+  test("huellas [+]: La huella de d0 es igual incluso si d0 está adentro del corpus"){
+    assert(huella(d0,3) == huellas(c1,3).head)
+  }
+  
+  test("huellas [+]: Dos corpus iguales generan las mismas huellas"){
+    assert(huellas(c2,3) == huellas(c2,3))
+  }
+
+  val corpusVacio: Corpus = Vector()
+
+  test("huellas [+]: Un corpus vacío da un vector vacío"){
+    assert(huellas(corpusVacio,3).isEmpty)
+  }
+
+  test("huellas [+]: Cuando hay menos de k palabras, devuelve un vector con sets vacíos"){
+    assert(huellas(c2,30).forall(_.isEmpty))
+  }
+
+  test("huellas [+]: Con un k menor a 1 los sets contienen un vector vacío"){
+    assert(huellas(c1,-2).forall(_.forall(_.isEmpty)))
+  }
+
+  // Jaccard - 2.6
+  test("jaccard [+]: Dos huellas vacías dan como resultado 0"){
+    assert(jaccard(huella(e2,0),huella(e3,0)) == 0)
+  }
+
+  test("jaccard [+]: Con una huella vacía, el resultado es 0"){
+    assert(jaccard(huella(e2,0),huella(e3,3)) == 0)
+  }
+
+  test("jaccard [+]: Las huellas de 2 documentos totalmente distintos da como resultado 0"){
+    assert(jaccard(huella(d0,3),huella(e3,3)) == 0)
+  }
+
+  test("jaccard [+]: Jaccard de d0 y d1 con k=4 resulta en 0.2"){
+    assert(math.abs(jaccard(huella(d0, 4), huella(d1, 4)) - 0.2) < eps)
+  }
+
+  test("jaccard [+]: Dos huellas identicas da 1"){
+    assert(jaccard(huella(e0,3),huella(e0,3)) == 1)
+  }
+
+  // Parejas - 2.7
+  test("parejas [+]: i es menor a j"){
+    assert(parejas(5).forall { case (a,b) => a < b })
+  }
+
+  test("parejas [+]: No hay parejas (i,i)"){
+    assert(parejas(5).forall { case (a,b) => a != b })
+  }
+
+  test("parejas [+]: n = 1 da un Vector vacío"){
+    assert(parejas(1).isEmpty)
+  }
+
+  test("parejas [+]: n = 3 da Vector( (1,2), (1,3), (2,3) )"){
+    assert(parejas(3) == Vector( (1,2),(1,3),(2,3) ))
+  }
+
+  test("parejas [+]: n = 10 da un tamaño de 45 [ 10 (10-1)/2 ]"){
+    assert(parejas(10).length == 45)
+  }
+
 }
