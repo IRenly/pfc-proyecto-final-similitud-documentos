@@ -116,7 +116,7 @@ object Similitud {
 
   /** Las n (n - 1) / 2 parejas (i, j) con i < j, en orden. */
   def parejas(n: Int): Vector[Pareja] = {
-    val rango = (1 to n).toVector
+    val rango = (0 until n).toVector
 
     for{
       i <- rango

@@ -190,8 +190,8 @@ class SimilitudTest extends AnyFunSuite {
     assert(parejas(1).isEmpty)
   }
 
-  test("parejas [+]: n = 3 da Vector( (1,2), (1,3), (2,3) )"){
-    assert(parejas(3) == Vector( (1,2),(1,3),(2,3) ))
+  test("parejas [+]: n = 3 da Vector( (0,1), (0,2), (1,2) )"){
+    assert(parejas(3) == Vector( (0,1),(0,2),(1,2) ))
   }
 
   test("parejas [+]: n = 10 da un tamaño de 45 [ 10 (10-1)/2 ]"){
