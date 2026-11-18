@@ -17,12 +17,12 @@ considera que no hizo parte del proyecto y su nota individual es 0.0, por más
 commits que tenga. Si falta alguno, la entrega se sanciona con el 20 % de la
 nota.
 
-| Nombre completo | Código |
-|---|---|
-| | |
-| | |
-| | |
-| | |
+| Nombre completo                    | Código  |
+|------------------------------------|---------|
+| Georsuans Sebastian Giraldo Patiño | 2611027 |
+| Dilan Yassefh Garcia Lopez         | 2669302 |
+| Juan José García Lopez             | 2669427 |
+| Cristian Daniel Martinez Patiño    | 2669052 |
 
 ## El problema, en una línea
 
