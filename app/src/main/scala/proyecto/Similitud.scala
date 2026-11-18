@@ -116,7 +116,7 @@ object Similitud {
 
   /** Las n (n - 1) / 2 parejas (i, j) con i < j, en orden. */
   def parejas(n: Int): Vector[Pareja] = {
-    val rango = (1 to n).toVector
+    val rango = (0 until n).toVector
 
     for{
       i <- rango
@@ -134,13 +134,27 @@ object Similitud {
    * El mapa de cada fragmento al conjunto de documentos donde aparece, con los
    * documentos identificados por su posición en el vector de huellas.
    */
-  def indiceInvertido(hs: Vector[Huella]): Indice = ???
+  def indiceInvertido(hs: Vector[Huella]): Indice = {
+    hs.zipWithIndex.foldLeft(Map.empty[Fragmento,Set[Int]]){
+      case (indice, (huella, i)) =>
+        huella.foldLeft(indice) {
+          case (mapa, fragmento) =>
+            mapa.updated(
+              fragmento,
+              mapa.getOrElse(fragmento, Set.empty[Int]) + i
+            )
+        }
+    }
+  }
 
   /**
    * Las parejas que comparten al menos un fragmento, sin repetir y ordenadas.
    * Una misma pareja puede salir de varias entradas del índice.
    */
-  def parejasCandidatas(idx: Indice): Vector[Pareja] = ???
+  def parejasCandidatas(idx: Indice): Vector[Pareja] = {
+    idx.values.toVector.flatMap(documentos =>
+      documentos.toVector.sorted.combinations(2).map(par =>(par(0),par(1)))).distinct.sorted
+  }
 
   /**
    * Las mediciones que alcanzan el umbral, de mayor a menor similitud y
