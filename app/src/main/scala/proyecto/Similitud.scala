@@ -126,7 +126,9 @@ object Similitud {
   }
 
   /** La similitud de cada pareja que se le pase, en el mismo orden. */
-  def similitudes(hs: Vector[Huella], ps: Vector[Pareja]): Vector[Medicion] = ???
+  def similitudes(hs: Vector[Huella], ps: Vector[Pareja]): Vector[Medicion] = {
+    ps.map { case (i, j) => (i, j, jaccard(hs(i), hs(j))) }
+  }
 
   /**
    * El mapa de cada fragmento al conjunto de documentos donde aparece, con los
@@ -159,26 +161,28 @@ object Similitud {
    * truncadas a p. Los empates se rompen por posición, de modo que el
    * resultado no dependa del orden en que llegaron las mediciones.
    */
-  def ranking(ss: Vector[Medicion], umbral: Double, p: Int): Vector[Medicion] = ???
+  def ranking(ss: Vector[Medicion], umbral: Double, p: Int): Vector[Medicion] = {
+    ss.filter { case (_, _, sim) => sim >= umbral }
+      .sortBy { case (i, j, sim) => (-sim, i, j) }
+      .take(p)
+  }
 
   /** Solución directa: compara las n (n - 1) / 2 parejas. */
   def detectarDirecto(c: Corpus, k: Int, umbral: Double,
                       p: Int): Vector[Medicion] = {
     val hs = huellas(c, k)
-    val ps = parejas(hs.length)
-    val ss = similitudes(hs,ps)
-
-    ranking(ss, umbral, p)
+    val ps = parejas(c.length)
+    val ms = similitudes(hs, ps)
+    ranking(ms, umbral, p)
   }
 
   /** Solución con índice: compara solo las parejas candidatas. */
   def detectarConIndice(c: Corpus, k: Int, umbral: Double,
                         p: Int): Vector[Medicion] = {
-    val hs = huellas(c,k)
+    val hs = huellas(c, k)
     val idx = indiceInvertido(hs)
-    val ps = parejasCandidatas(idx)
-    val ss = similitudes(hs, ps)
-
-    ranking(ss, umbral, p)
+    val cand = parejasCandidatas(idx)
+    val ms = similitudes(hs, cand)
+    ranking(ms, umbral, p)
   }
 }
