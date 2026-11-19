@@ -86,6 +86,30 @@ class SimilitudTest extends AnyFunSuite {
     assert(huella(d2, 3).size == 3)
   }
 
+  test("huella: repetidos cuentan una vez"){
+    val d =("D0", Vector("a","b","a","b","a"))
+    assert(Similitud.huella(d,2) == Set(Vector("a","b"), Vector("b","a")))
+  }
+
+  test("huella: documento corto"){
+    assert(Similitud.huella(("D", Vector("a")), 3) == Set())
+  }
+
+  test("huella: sin repetidos, tamaño t-k+1"){
+    assert(Similitud.huella(("D", Vector("a","b","c","d","e")), 2).size == 4)
+  }
+
+  test("huella: k=1 es el vocabulario"){
+    assert(Similitud.huella(("D", Vector("a","b","a")), 1) == Set(Vector("a"), Vector("b")))
+  }
+
+  test("huella: el orden y las repeticiones no cambian el conjunto") {
+    val d1 = ("D1", Vector("a", "b", "c", "a", "b", "c"))
+    val d2 = ("D2", Vector("a", "b", "c", "a", "b", "c", "a", "b"))
+    assert(Similitud.huella(d1, 2) == Set(Vector("a", "b"), Vector("b", "c"), Vector("c", "a")))
+    assert(Similitud.huella(d2, 2) == Similitud.huella(d1, 2))
+  }
+
   test("huellas: hay una huella por documento") {
     assert(huellas(c1, 3).length == 3)
   }
